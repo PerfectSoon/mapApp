@@ -8,7 +8,7 @@ class WaterBody(Base):
     __tablename__ = "water_bodies"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("water_body_types.id"))
     depth: Mapped[float] = mapped_column(Float, nullable=False)
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
@@ -37,7 +37,7 @@ class Organism(Base):
     __tablename__ = "organisms"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String, nullable=False)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     species: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     # Добавляем связь с таблицей типа организма

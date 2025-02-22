@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from database.database import get_db
-from database.models import WaterBody
 from database.schemas import WaterBodyOut, WaterBodyCreate
 from database.crud import water_body_crud
 
@@ -44,3 +43,16 @@ def search_water_bodies(
         )
 
     return water_bodies
+
+
+@router.post("/{water_body_id}/add_organisms")
+def add_organisms_to_water_body(
+        water_body_id: int,
+        organism_ids: List[int],
+        db: Session = Depends(get_db)
+):
+    try:
+        updated_water_body = water_body_crud.add_organisms_to_water_body(db, water_body_id, organism_ids)
+        return {"message": "Организмы добавлены успешно", "water_body": updated_water_body}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

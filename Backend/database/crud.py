@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
 from database.models import Organism, WaterBody, WaterBodyType
-from database.schemas import WaterBodyCreate, WaterBodyOut
+from database.schemas import WaterBodyCreate
 from typing import List, Optional
-from fastapi import HTTPException
 
 
 class WaterBodyCRUD:
@@ -61,5 +60,22 @@ class WaterBodyCRUD:
         db.commit()
         db.refresh(water_body)
 
+    def add_organisms_to_water_body(self,db: Session, water_body_id: int, organism_ids: List[int]):
+        water_body = db.query(WaterBody).filter(WaterBody.id == water_body_id).first()
+        if not water_body:
+            raise ValueError("Водоем не найден")
+
+        organisms = db.query(Organism).filter(Organism.id.in_(organism_ids)).all()
+        if not organisms:
+            raise ValueError("Некоторые организмы не найдены")
+
+        for organism in organisms:
+            if organism not in water_body.organisms:
+                water_body.organisms.append(organism)
+
+        db.commit()
+        db.refresh(water_body)
+
+        return water_body
 
 water_body_crud = WaterBodyCRUD()
