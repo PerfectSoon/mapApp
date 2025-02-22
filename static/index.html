@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта водоемов</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Интерактивная карта водоемов</h1>
+
+    <div class="controls">
+        <label for="minDepth">Мин. глубина:</label>
+        <input type="number" id="minDepth" placeholder="Мин. глубина">
+
+        <label for="maxDepth">Макс. глубина:</label>
+        <input type="number" id="maxDepth" placeholder="Макс. глубина">
+
+        <label for="organismFilter">Фильтр по организму:</label>
+        <input type="text" id="organismFilter" placeholder="Название организма">
+
+        <input type="text" id="search" placeholder="Поиск по названию...">
+        <select id="filter">
+            <option value="">Все типы</option>
+        </select>
+        <button id="export">Экспорт JSON</button>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+    <script src="/static/map.js"></script>
+</body>
+</html>
