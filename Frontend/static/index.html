@@ -1,36 +1,49 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Карта водоемов</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-    <link rel="stylesheet" href="/static/styles.css">
+  <meta charset="UTF-8" />
+  <title>Гидробиологическое разнообразие водоемов</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <link rel="stylesheet" href="/static/style.css?v=2">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 </head>
 <body>
-    <h1>Интерактивная карта водоемов</h1>
+  <!-- Фиксированный контейнер для шапки и фильтров -->
+  <div class="fixed-header">
+    <header class="header">
+      <h1 class="header__title">Гидробиологическое разнообразие водоемов</h1>
+      <button class="login-button">Войти</button>
+    </header>
+    <section class="filters">
+      <div class="filters__types">
+        <!-- Кнопки для типов водоемов будут создаваться динамически -->
+      </div>
+      <div class="filters__search">
+        <input type="text" id="search" placeholder="Поиск по водоемам" />
+      </div>
+    </section>
+  </div>
 
-    <div class="controls">
-        <label for="minDepth">Мин. глубина:</label>
-        <input type="number" id="minDepth" placeholder="Мин. глубина">
+  <!-- Основной контент -->
+  <main class="main-content">
+    <!-- Левая колонка: карта -->
+    <div class="main-content__left" id="map"></div>
+    <!-- Правая колонка: список карточек -->
+    <aside class="main-content__right" id="waterBodyList">
+      <!-- Карточки будут динамически добавляться сюда -->
+    </aside>
+  </main>
 
-        <label for="maxDepth">Макс. глубина:</label>
-        <input type="number" id="maxDepth" placeholder="Макс. глубина">
-
-        <label for="organismFilter">Фильтр по организму:</label>
-        <input type="text" id="organismFilter" placeholder="Название организма">
-
-        <input type="text" id="search" placeholder="Поиск по названию...">
-        <select id="filter">
-            <option value="">Все типы</option>
-        </select>
-        <button id="export">Экспорт JSON</button>
+  <!-- Модальное окно для подробной информации -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <span id="modal-close" class="modal-close">&times;</span>
+      <div id="modal-body"></div>
     </div>
+  </div>
 
-    <div id="map"></div>
-
-    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
-
-    <script src="/static/map.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script src="/static/main.js"></script>
 </body>
 </html>

@@ -42,6 +42,7 @@ def search_water_bodies(
             detail="Водоёмы, удовлетворяющие заданным параметрам, не найдены"
         )
 
+
     return water_bodies
 
 

@@ -31,7 +31,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Интерактивные карты водоемов",
-    lifespan=lifespan
+    lifespan=lifespan,
+
 )
 
 # Пути (исправлен регистр для Linux-совместимости)
@@ -55,7 +56,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 # Главная страница
-@app.get("/", include_in_schema=False)
+@app.get("/")
 async def serve_index():
     return FileResponse(INDEX_PATH)
 
