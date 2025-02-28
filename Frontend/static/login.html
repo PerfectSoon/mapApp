@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Вход - Aqua Biodiversity Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/auth.css?v=2">
+</head>
+<body>
+  <div id="notificationContainer" class="notification-container"></div>
+  <h1>Вход</h1>
+  <section>
+    <form id="loginForm">
+      <label for="loginEmail">Email:</label>
+      <input type="email" id="loginEmail" placeholder="Введите ваш email" required>
+      <label for="loginPassword">Пароль:</label>
+      <input type="password" id="loginPassword" placeholder="Введите пароль" required>
+      <!-- Если используется OAuth2PasswordRequestForm, client_id и client_secret можно задать произвольно -->
+      <input type="hidden" id="clientId" value="dummy">
+      <input type="hidden" id="clientSecret" value="dummy">
+      <button type="submit">Войти</button>
+      <button type="submit" id="registerButton">Регистрация</button>
+    </form>
+  </section>
+  <script>
+    document.getElementById("registerButton").addEventListener("click", function() {
+      window.location.href = "register.html";
+    });
+  </script>
+  <script src="/static/auth.js"></script>
+</body>
+</html>

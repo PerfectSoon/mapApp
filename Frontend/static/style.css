@@ -14,10 +14,13 @@ body, html {
   color: #222;
   background-color: #f5f5f5;
   line-height: 1.6;
+
 /* Фиксированный контейнер для шапки и фильтров */
 .fixed-header {
   position: fixed;
-  top: 0;
+
+  top: 0px;
+  margin-top: 1rem;
   left: 50%;
   transform: translateX(-50%);
   width: 65%;
@@ -39,22 +42,50 @@ body, html {
 }
 
 /* Кнопка Войти в углу страницы */
-.login-button {
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
+.header__buttons {
+    display: flex;
+    gap: 10px;
 }
 
-.login-button:hover {
-  background-color: #0056b3;
+.profile-button, .login-button export-button::hover{
+    padding: 8px 16px;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.profile-button:hover, .login-button:hover export-button::hover{
+    background-color: #0b7dda;
+}
+
+/* Стили для кнопки выхода */
+.logout-button {
+    padding: 8px 16px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 15px;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #d32f2f;
+}
+
+/* Стили для данных профиля */
+#profileData {
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 4px;
+    max-height: 300px;
+    overflow: auto;
+    margin: 15px 0;
 }
 
 /* Панель фильтров */
@@ -72,7 +103,14 @@ body, html {
   gap: 8px;
   padding: 8px 12px;
 }
-
+.filters__search input {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 100%;
+    box-sizing: border-box;
+}
 .filters__btn {
   padding: 8px 12px;
   border: 1px solid #ccc;
@@ -132,6 +170,7 @@ body, html {
 .main-content__right {
   width: 35%;
   height: 100%;
+
   overflow-y: auto;
   box-sizing: border-box;
   border-radius: 8px;
@@ -140,24 +179,48 @@ body, html {
   flex-direction: column;
   gap: 16px;
 }
+/* Стили скроллбара */
+.main-content__right::-webkit-scrollbar {
+  width: 10px;
+}
+
+.main-content__right::-webkit-scrollbar-track {
+  -webkit-box-shadow: 5px 5px 5px -5px rgba(34, 60, 80, 0.2) inset;
+  background-color: #f9f9fd;
+  border-radius: 10px;
+}
+
+.main-content__right::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: linear-gradient(180deg, #00c6fb, #005bea);
+}
+
 
 /* Стили карточек */
 .card {
   background-color: #fff;
-  border: 1px solid #eaeaea;
-  border-radius: 8px;
+  border: none;
+  border-radius: 16px;
   width: 90%;
   padding: 16px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(10px);
+  position: relative
 }
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  background-color: #fafcff;
+}
+
+.card:hover::before {
+  opacity: 1;
 }
 
 .card__title {
@@ -169,9 +232,10 @@ body, html {
 }
 
 .card__description {
-  font-size: 16px;
-  color: #333;
-  text-align: left;
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+    text-align: left;
 }
 
 /* Стили модального окна */
@@ -246,3 +310,9 @@ button {
 button:hover {
     background: #0056b3;
 }
+li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+

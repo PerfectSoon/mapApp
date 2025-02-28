@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from database.database import get_db
 from database.schemas import WaterBodyOut, WaterBodyCreate
-from database.crud import water_body_crud
+from water_bodies.crud import water_body_crud
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ def create_water_body(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.get("/", response_model=List[WaterBodyOut])
+@router.get("/search", response_model=List[WaterBodyOut])
 def search_water_bodies(
         name: Optional[str] = Query(None, description="Часть или полное название водоёма"),
         type_id: Optional[int] = Query(None, description="ID типа водоёма"),

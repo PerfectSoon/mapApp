@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Функция загрузки данных о водоёмах
   async function loadWaterBodies() {
     try {
-      const response = await fetch('/water_bodies'); // Убедитесь, что URL правильный
+      const response = await fetch('/water_bodies/search'); // Убедитесь, что URL правильный
       if (!response.ok) {
         throw new Error(`Ошибка запроса: ${response.statusText}`);
       }

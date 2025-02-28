@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
-# Схемы для типов водоёмов
+
 class WaterBodyTypeBase(BaseModel):
     name: str
 
@@ -14,7 +14,7 @@ class WaterBodyTypeOut(WaterBodyTypeBase):
     class Config:
         from_attributes = True
 
-# Схемы для типов организмов
+
 class OrganismTypeBase(BaseModel):
     name: str
 
@@ -27,18 +27,18 @@ class OrganismTypeOut(OrganismTypeBase):
     class Config:
         from_attributes = True
 
-# Схемы для организмов
+
 class OrganismBase(BaseModel):
     name: str
     species: str
     description: Optional[str] = None
 
 class OrganismCreate(OrganismBase):
-    # При создании указываем тип организма и список ID водоёмов (так как связь многие‑ко‑многим)
+
     organism_type_id: int
     water_body_ids: List[int] = []
 
-# Чтобы при вложении избежать рекурсии, определяем краткую схему для водоёмов
+
 class WaterBodyShortOut(BaseModel):
     id: int
     name: str
@@ -55,7 +55,7 @@ class OrganismOut(OrganismBase):
     class Config:
         from_attributes = True
 
-# Схемы для водоёмов
+
 class WaterBodyBase(BaseModel):
     name: str
     depth: float
@@ -64,11 +64,10 @@ class WaterBodyBase(BaseModel):
     description: Optional[str] = None
 
 class WaterBodyCreate(WaterBodyBase):
-    # При создании указываем тип водоёма и список ID организмов, связанных с водоёмом
     type_id: int
     organism_ids: List[int] = []
 
-# Для вложенного отображения организма в водоёме определим краткую схему
+
 class OrganismShortOut(BaseModel):
     id: int
     name: str
@@ -83,3 +82,4 @@ class WaterBodyOut(WaterBodyBase):
 
     class Config:
         from_attributes = True
+
