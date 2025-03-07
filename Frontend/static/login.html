@@ -20,14 +20,9 @@
       <input type="hidden" id="clientId" value="dummy">
       <input type="hidden" id="clientSecret" value="dummy">
       <button type="submit">Войти</button>
-      <button type="submit" id="registerButton">Регистрация</button>
+      <a href="register.html" id="registerLink"  class="centered-link">Еще нет аккаунта? Зарегистрироваться</a>
     </form>
   </section>
-  <script>
-    document.getElementById("registerButton").addEventListener("click", function() {
-      window.location.href = "register.html";
-    });
-  </script>
   <script src="/static/auth.js"></script>
 </body>
 </html>
