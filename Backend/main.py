@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database.database import Base, engine, SessionLocal
 from water_bodies import water_bodies
+from statistic import statistic
 from export import export
 from user import auth_router
 from seed import populate_db
@@ -22,7 +23,7 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        populate_db(db)
+        #populate_db(db)
         create_admin(db)
     finally:
         db.close()
@@ -49,7 +50,8 @@ INDEX_PATH = STATIC_DIR / "index.html"
 
 app.include_router(water_bodies.router, prefix="/water_bodies", tags=["water_bodies"])
 app.include_router(export.router, prefix="/export", tags=["export"])
-app.include_router(auth_router.router)
+app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
+app.include_router(statistic.router, prefix="/statistics", tags=["statistics"])
 
 
 app.mount("/static", StaticFiles(directory=STATIC_DIR,  html=True), name="static")

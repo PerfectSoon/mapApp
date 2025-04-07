@@ -1,299 +1,208 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Админ панель - Управление водоёмами и организмами</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
-    /* Основные переменные и базовые стили */
-    :root {
-      --primary-color: #007bff;
-      --secondary-color: #0056b3;
-      --background-color: #f5f5f5;
-      --card-background: #ffffff;
-      --input-border: #ccc;
-      --input-radius: 8px;
-      --text-color: #222;
-      --font-family: 'Inter', sans-serif;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      margin: 0;
-      font-family: var(--font-family);
-      background-color: var(--background-color);
-      color: var(--text-color);
-    }
-    /* Шапка админки */
-    header.admin-header {
-      background-color: var(--card-background);
-      padding: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    header.admin-header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-    header.admin-header nav button {
-      margin-left: 10px;
-      padding: 10px 15px;
-      font-size: 14px;
-      background-color: var(--primary-color);
-      border: none;
-      color: #fff;
-      border-radius: var(--input-radius);
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    header.admin-header nav button:hover {
-      background-color: var(--secondary-color);
-    }
-    /* Основное содержимое */
-    main {
-      padding: 20px;
-    }
-    section.admin-section {
-      background-color: var(--card-background);
-      margin-bottom: 20px;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    section.admin-section h2 {
-      margin-top: 0;
-    }
-    section.admin-section button {
-      padding: 10px 15px;
-      font-size: 14px;
-      background-color: var(--primary-color);
-      border: none;
-      color: #fff;
-      border-radius: var(--input-radius);
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    section.admin-section button:hover {
-      background-color: var(--secondary-color);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    table, th, td {
-      border: 1px solid var(--input-border);
-    }
-    th, td {
-      padding: 10px;
-      text-align: left;
-    }
-    th {
-      background-color: var(--background-color);
-    }
-    .action-buttons button {
-      margin-right: 5px;
-      padding: 5px 10px;
-      font-size: 12px;
-    }
-    /* Модальное окно */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.4);
-    }
-    .modal-content {
-      background-color: #fff;
-      margin: 10% auto;
-      padding: 20px;
-      border-radius: 12px;
-      width: 80%;
-      max-width: 500px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-    .modal-close {
-      float: right;
-      font-size: 24px;
-      cursor: pointer;
-    }
-    .modal form {
-      display: flex;
-      flex-direction: column;
-    }
-    .modal form label {
-      margin-bottom: 5px;
-      font-weight: 500;
-    }
-    .modal form input, .modal form textarea {
-      margin-bottom: 10px;
-      padding: 8px;
-      border: 1px solid var(--input-border);
-      border-radius: var(--input-radius);
-      font-size: 14px;
-    }
-    .modal form button {
-      align-self: flex-end;
-      padding: 10px 15px;
-      background-color: var(--primary-color);
-      color: #fff;
-      border: none;
-      border-radius: var(--input-radius);
-      cursor: pointer;
-    }
-    .modal form button:hover {
-      background-color: var(--secondary-color);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Админка — Водоёмы</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f0f2f5;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        input, select, button {
+            margin-top: 5px;
+            margin-bottom: 15px;
+            padding: 8px;
+            width: 100%;
+            max-width: 300px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background: #eef;
+            border: 1px solid #aac;
+            font-family: monospace;
+            max-height: 400px;
+            overflow: auto;
+        }
+
+        .error {
+            background: #ffe0e0;
+            border: 1px solid #ff9999;
+        }
+
+        .success {
+            background: #e0ffe0;
+            border: 1px solid #99cc99;
+        }
+    </style>
 </head>
 <body>
 
-  <header class="admin-header">
-    <h1>Админ панель</h1>
-    <nav>
-      <button id="btnWaterBodies">Водоемы</button>
-      <button id="btnOrganisms">Организмы</button>
-    </nav>
-  </header>
+<h1>Панель администратора</h1>
 
-  <main>
-    <!-- Раздел управления водоёмами -->
-    <section id="sectionWaterBodies" class="admin-section">
-      <h2>Управление Водоёмами</h2>
-      <button id="addWaterBodyBtn">Добавить водоём</button>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Название</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody id="waterBodyList">
-        </tbody>
-      </table>
-    </section>
+<!-- Создание водоёма -->
+<section>
+    <h2>Создание нового водоёма</h2>
+    <label for="name">Название</label>
+    <input id="name" placeholder="Например: Байкал" title="Название водоёма">
 
-    <!-- Раздел управления организмами -->
-    <section id="sectionOrganisms" class="admin-section" style="display: none;">
-      <h2>Управление Организмами</h2>
-      <button id="addOrganismBtn">Добавить организм</button>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Название</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody id="organismList">
+    <label for="depth">Глубина (м)</label>
+    <input id="depth" type="number" step="0.1" placeholder="Например: 744.4" title="Глубина в метрах">
 
-        </tbody>
-      </table>
-    </section>
-  </main>
+    <label for="ph">pH</label>
+    <input id="ph" type="number" step="0.1" placeholder="Например: 7.2" title="Уровень кислотности pH">
 
-  <!-- Модальное окно для добавления/редактирования -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <span class="modal-close" id="modalClose">&times;</span>
-      <div id="modalBody">
-        <form id="modalForm">
-          <input type="hidden" id="itemId" value="">
-          <div>
-            <label for="itemName">Название</label>
-            <input type="text" id="itemName" required>
-          </div>
-          <div>
-            <label for="itemDescription">Описание</label>
-            <textarea id="itemDescription" rows="4"></textarea>
-          </div>
-          <button type="submit">Сохранить</button>
-        </form>
-      </div>
-    </div>
-  </div>
+    <label for="type_id">ID типа водоёма</label>
+    <input id="type_id" type="number" placeholder="Например: 1" title="ID типа: 1 - озеро, 2 - река и т.д.">
 
-  <script>
-    // Переключение между разделами админки
-    document.getElementById('btnWaterBodies').addEventListener('click', function() {
-      document.getElementById('sectionWaterBodies').style.display = 'block';
-      document.getElementById('sectionOrganisms').style.display = 'none';
-    });
-    document.getElementById('btnOrganisms').addEventListener('click', function() {
-      document.getElementById('sectionWaterBodies').style.display = 'none';
-      document.getElementById('sectionOrganisms').style.display = 'block';
-    });
+    <button onclick="createWaterBody()">Создать</button>
+    <div id="createResult" class="result"></div>
+</section>
 
-    // Модальное окно
-    const modal = document.getElementById('modal');
-    const modalClose = document.getElementById('modalClose');
-    modalClose.addEventListener('click', () => modal.style.display = 'none');
-    window.addEventListener('click', (e) => {
-      if (e.target === modal) modal.style.display = 'none';
-    });
+<!-- Поиск водоёмов -->
+<section>
+    <h2>Поиск водоёмов</h2>
+    <label for="searchName">Название</label>
+    <input id="searchName" placeholder="Введите часть названия">
 
-    // Обработка формы в модальном окне
-    document.getElementById('modalForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      // Здесь следует реализовать логику сохранения (например, отправку данных на сервер)
-      alert('Данные сохранены!');
-      modal.style.display = 'none';
-      document.getElementById('modalForm').reset();
-    });
+    <label for="searchTypeId">ID типа</label>
+    <input id="searchTypeId" type="number">
 
-    // Пример функций для редактирования/удаления записей (будут заменены на реальные запросы)
-    function editWaterBody(id) {
-      // Загрузить данные водоёма (пример)
-      document.getElementById('itemId').value = id;
-      document.getElementById('itemName').value = 'Водоём ' + id;
-      document.getElementById('itemDescription').value = 'Описание водоёма ' + id;
-      modal.style.display = 'block';
+    <label for="minDepth">Мин. глубина</label>
+    <input id="minDepth" type="number" step="0.1">
+
+    <label for="maxDepth">Макс. глубина</label>
+    <input id="maxDepth" type="number" step="0.1">
+
+    <button onclick="searchWaterBodies()">Искать</button>
+    <div id="searchResult" class="result"></div>
+</section>
+
+<!-- Добавление организмов -->
+<section>
+    <h2>Добавление организмов</h2>
+    <label for="targetWaterBodyId">ID водоёма</label>
+    <input id="targetWaterBodyId" type="number" placeholder="Например: 5">
+
+    <label for="organismIds">ID организмов (через запятую)</label>
+    <input id="organismIds" placeholder="Пример: 3,4,5">
+
+    <button onclick="addOrganisms()">Добавить</button>
+    <div id="addResult" class="result"></div>
+</section>
+
+<script>
+    function showResult(containerId, data, isError = false) {
+        const container = document.getElementById(containerId);
+        container.textContent = typeof data === "string" ? data : JSON.stringify(data, null, 2);
+        container.className = `result ${isError ? "error" : "success"}`;
     }
 
-    function deleteWaterBody(id) {
-      if (confirm('Удалить водоём ' + id + '?')) {
-        alert('Водоём удалён!');
-        // Реализуйте удаление записи
-      }
+    async function createWaterBody() {
+        const payload = {
+            name: document.getElementById("name").value,
+            depth: parseFloat(document.getElementById("depth").value),
+            ph: parseFloat(document.getElementById("ph").value),
+            type_id: parseInt(document.getElementById("type_id").value)
+        };
+
+        try {
+            const res = await fetch(`/water_bodies/create`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            showResult("createResult", data, !res.ok);
+        } catch (err) {
+            showResult("createResult", "Ошибка при создании водоёма", true);
+        }
     }
 
-    function editOrganism(id) {
-      document.getElementById('itemId').value = id;
-      document.getElementById('itemName').value = 'Организм ' + id;
-      document.getElementById('itemDescription').value = 'Описание организма ' + id;
-      modal.style.display = 'block';
+    async function searchWaterBodies() {
+        const params = new URLSearchParams();
+        const name = document.getElementById("searchName").value;
+        const typeId = document.getElementById("searchTypeId").value;
+        const minDepth = document.getElementById("minDepth").value;
+        const maxDepth = document.getElementById("maxDepth").value;
+
+        if (name) params.append("name", name);
+        if (typeId) params.append("type_id", typeId);
+        if (minDepth) params.append("min_depth", minDepth);
+        if (maxDepth) params.append("max_depth", maxDepth);
+
+        try {
+            const res = await fetch(`/water_bodies/search?${params.toString()}`);
+            const data = await res.json();
+            showResult("searchResult", data, !res.ok);
+        } catch (err) {
+            showResult("searchResult", "Ошибка при поиске водоёмов", true);
+        }
     }
 
-    function deleteOrganism(id) {
-      if (confirm('Удалить организм ' + id + '?')) {
-        alert('Организм удалён!');
-        // Реализуйте удаление записи
-      }
+    async function addOrganisms() {
+        const id = document.getElementById("targetWaterBodyId").value;
+        const ids = document.getElementById("organismIds").value
+            .split(',')
+            .map(id => parseInt(id.trim()))
+            .filter(id => !isNaN(id));
+
+        if (!id || ids.length === 0) {
+            showResult("addResult", "Укажите корректный ID водоёма и хотя бы один ID организма", true);
+            return;
+        }
+
+        try {
+            const res = await fetch(`/water_bodies/${id}/add_organisms`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(ids)
+            });
+            const data = await res.json();
+            showResult("addResult", data, !res.ok);
+        } catch (err) {
+            showResult("addResult", "Ошибка при добавлении организмов", true);
+        }
     }
+</script>
 
-    // Открытие модального окна для добавления новой записи
-    document.getElementById('addWaterBodyBtn').addEventListener('click', function() {
-      document.getElementById('itemId').value = '';
-      document.getElementById('itemName').value = '';
-      document.getElementById('itemDescription').value = '';
-      modal.style.display = 'block';
-    });
-
-    document.getElementById('addOrganismBtn').addEventListener('click', function() {
-      document.getElementById('itemId').value = '';
-      document.getElementById('itemName').value = '';
-      document.getElementById('itemDescription').value = '';
-      modal.style.display = 'block';
-    });
-  </script>
 </body>
 </html>

@@ -1,7 +1,9 @@
+from sqlalchemy import func
 from sqlalchemy.orm import Session
-from database.models import Organism, WaterBody, WaterBodyType
-from database.schemas import WaterBodyCreate
+from database.models import Organism, WaterBody, WaterBodyType, OrganismType
+from database.schemas import WaterBodyCreate, OrganismTypeCreate
 from typing import List, Optional
+
 
 
 class WaterBodyCRUD:
@@ -9,15 +11,9 @@ class WaterBodyCRUD:
         wb_type = db.query(WaterBodyType).get(water_body.type_id)
         if not wb_type:
             raise ValueError("Тип водоёма не найден")
+        water_body_data = water_body.dict(exclude={"organism_ids"})
+        db_water_body = WaterBody(**water_body_data)
 
-        db_water_body = WaterBody(
-            name=water_body.name,
-            type_id=water_body.type_id,
-            depth=water_body.depth,
-            latitude=water_body.latitude,
-            longitude=water_body.longitude,
-            description=water_body.description
-        )
 
         db.add(db_water_body)
         db.commit()
@@ -77,5 +73,17 @@ class WaterBodyCRUD:
         db.refresh(water_body)
 
         return water_body
+
+    def create_organism_type(self,db: Session, org_type_data: OrganismTypeCreate):
+        print(org_type_data)
+        org_type = OrganismType(**org_type_data)
+
+        db.add(org_type)
+        db.commit()
+        db.refresh(org_type)
+
+        return
+
+
 
 water_body_crud = WaterBodyCRUD()

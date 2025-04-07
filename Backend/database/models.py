@@ -1,10 +1,17 @@
 from typing import List, Optional
-
+from sqlalchemy import Enum as SAEnum
+from enum import Enum
 from pydantic import EmailStr
-from sqlalchemy import ForeignKey, String, Float, Text, Boolean, Enum
+from sqlalchemy import ForeignKey, String, Float, Text, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database.database import Base
 
+
+class Status(str, Enum):
+    low = "Низкий"
+    avg = "Средний"
+    good = "Хороший"
+    great = "Отличный"
 
 class WaterBody(Base):
     __tablename__ = "water_bodies"
@@ -17,6 +24,11 @@ class WaterBody(Base):
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
+    region_id: Mapped[Optional[int]] = mapped_column(ForeignKey("region.id"))
+    ph: Mapped[float] = mapped_column(Float, nullable=False)
+    biodiversity_index: Mapped[float] = mapped_column(Float, nullable=False)
+    ecological_status: Mapped[str] = mapped_column(SAEnum(Status, native_enum=False), nullable=False)
+
 
     organisms: Mapped[List["Organism"]] = relationship(
         "Organism",
@@ -25,6 +37,7 @@ class WaterBody(Base):
     )
 
     type: Mapped["WaterBodyType"] = relationship("WaterBodyType", back_populates="water_bodies")
+    region: Mapped["Region"] = relationship("Region", back_populates="water_bodies")
 
 
 class WaterBodyOrganism(Base):
@@ -41,7 +54,7 @@ class Organism(Base):
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     species: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    # Добавляем связь с таблицей типа организма
+
     organism_type_id: Mapped[int] = mapped_column(ForeignKey("organism_types.id"), nullable=False)
 
     # Связь многие ко многим с WaterBody через вспомогательную таблицу "water_bodies_org"
@@ -53,6 +66,13 @@ class Organism(Base):
 
     organism_type: Mapped["OrganismType"] = relationship("OrganismType", back_populates="organisms")
 
+class Region(Base):
+    __tablename__ = "region"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+
+    water_bodies: Mapped[List["WaterBody"]] = relationship("WaterBody", back_populates="region")
 
 class WaterBodyType(Base):
     __tablename__ = "water_body_types"

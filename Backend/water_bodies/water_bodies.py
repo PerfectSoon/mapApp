@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from database.database import get_db
-from database.schemas import WaterBodyOut, WaterBodyCreate
+from database.schemas import WaterBodyOut, WaterBodyCreate, OrganismTypeCreate
 from water_bodies.crud import water_body_crud
 
 router = APIRouter()
@@ -54,6 +54,18 @@ def add_organisms_to_water_body(
 ):
     try:
         updated_water_body = water_body_crud.add_organisms_to_water_body(db, water_body_id, organism_ids)
-        return {"message": "Организмы добавлены успешно", "water_body": updated_water_body}
+        return {"message": "Организмы добавлены успешно", "water_bodies": updated_water_body}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/create_org_type")
+def create_org_type(
+        org_type_data: OrganismTypeCreate,
+        db: Session = Depends(get_db)
+):
+    try:
+        create_type = water_body_crud.create_organism_type(db, org_type_data)
+        return {"message": "Тип Организма добавлен успешно", "org_type": create_type}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

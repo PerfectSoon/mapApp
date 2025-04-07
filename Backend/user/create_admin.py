@@ -1,4 +1,3 @@
-# В файле crud.py
 from sqlalchemy.orm import Session
 from database.models import User
 from user.security import get_password_hash

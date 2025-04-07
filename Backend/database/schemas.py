@@ -1,6 +1,10 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from database.models import Status
 
+
+class WaterBodyCompareRequest(BaseModel):
+    water_body_ids: List[int]
 
 class WaterBodyTypeBase(BaseModel):
     name: str
@@ -14,6 +18,12 @@ class WaterBodyTypeOut(WaterBodyTypeBase):
     class Config:
         from_attributes = True
 
+class WaterBodyRegion(BaseModel):
+    id: int
+    name: str
+
+    class Config:
+        from_attributes = True
 
 class OrganismTypeBase(BaseModel):
     name: str
@@ -49,7 +59,6 @@ class WaterBodyShortOut(BaseModel):
 class OrganismOut(OrganismBase):
     id: int
     organism_type: OrganismTypeOut
-    # В выходной схеме можно вывести краткую информацию по водоёмам, с которыми связан организм
     water_bodies: List[WaterBodyShortOut] = []
 
     class Config:
@@ -62,9 +71,13 @@ class WaterBodyBase(BaseModel):
     latitude: float
     longitude: float
     description: Optional[str] = None
+    ph: float
+    biodiversity_index: float
+    ecological_status: Status
 
 class WaterBodyCreate(WaterBodyBase):
     type_id: int
+    region_id: int
     organism_ids: List[int] = []
 
 
@@ -78,6 +91,7 @@ class OrganismShortOut(BaseModel):
 class WaterBodyOut(WaterBodyBase):
     id: int
     type: WaterBodyTypeOut
+    region: WaterBodyRegion
     organisms: List[OrganismShortOut] = []
 
     class Config:

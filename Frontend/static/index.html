@@ -8,6 +8,140 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     <link rel="stylesheet" href="/static/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* Общие стили */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            color: #333;
+        }
+        /* Фиксированная шапка */
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        .header__title {
+            font-size: 20px;
+            color: #2c3e50;
+        }
+        .header__buttons button {
+            padding: 8px 15px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .statistic-button {
+            background-color: #3498db;
+            color: white;
+        }
+        .admin-button {
+            background-color: #800000;
+            color: white;
+        }
+        .export-button {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .profile-button, .login-button {
+            background-color: #f1f1f1;
+            color: #333;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        /* Секция фильтров */
+        .filters-section {
+            width: 90%;
+            max-width: 1300px;
+            margin: 80px auto 20px; /* Подстраиваем ширину под main-content */
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        .filter-group {
+            flex: 1;
+            min-width: 180px;
+        }
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        .filter-group select, .filter-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .search-filter {
+            flex: 2;
+            min-width: 250px;
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        .filter-buttons button {
+            padding: 9px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .apply-filter {
+            background-color: #3498db;
+            color: white;
+        }
+        .reset-filter {
+            background-color: #e74c3c;
+            color: white;
+        }
+        /* Основной контент */
+        .main-content {
+            width: 100%;
+            max-width: 1500px;
+            margin: 20px auto;
+            padding: 0 20px;
+
+        }
+        /* Левая колонка: карта */
+        .main-content__left {
+            height: calc(100vh - 250px);
+            margin-bottom: 100px;
+        }
+        /* Правая колонка: список карточек */
+        .main-content__right {
+            height: calc(100vh - 250px);
+            margin-bottom: 100px;
+        }
+    </style>
 </head>
 <body>
 
@@ -16,19 +150,52 @@
             <h1 class="header__title">Гидробиологическое разнообразие водоемов</h1>
             <div class="header__buttons">
                 <button class="admin-button" id="adminBtn" style="display: none;">Админка</button>
-                <button class="export-button" id="exportBtn">Экспорт CSV</button>
+                <button class="statistic-button" id="statisticBtn">Статистика</button>
+                <button class="export-button" id="exportBtn">Экспорт</button>
                 <button class="profile-button" id="profileBtn">Профиль</button>
                 <button class="login-button" id="loginBtn">Войти</button>
             </div>
         </header>
-        <section class="filters">
-            <div class="filters__types">
-            </div>
-            <div class="filters__search">
-                <input type="text" id="search" placeholder="Поиск по водоемам" />
-            </div>
-        </section>
     </div>
+
+    <!-- Секция фильтров -->
+<section class="filters-section">
+    <div class="filter-group">
+        <label for="typeFilter">Тип водоема</label>
+        <select id="typeFilter">
+            <option value="">Все типы</option>
+            <!-- Опции будут добавляться через JS -->
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label for="regionFilter">Регион</label>
+        <select id="regionFilter">
+            <option value="">Все регионы</option>
+            <!-- Опции будут добавляться через JS -->
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label for="phFilter">Диапазон pH</label>
+        <select id="phFilter">
+            <option value="">Все значения</option>
+            <option value="acidic">Кислые (pH < 6.5)</option>
+            <option value="neutral">Нейтральные (6.5–7.5)</option>
+            <option value="alkaline">Щелочные (pH > 7.5)</option>
+        </select>
+    </div>
+
+    <div class="filter-group search-filter">
+        <label for="searchInput">Поиск по названию</label>
+        <input type="text" id="searchInput" placeholder="Введите название водоема...">
+    </div>
+
+    <div class="filter-buttons">
+        <button class="apply-filter" id="applyFilterBtn">Применить</button>
+        <button class="reset-filter" id="resetFilterBtn">Сбросить</button>
+    </div>
+</section>
 
     <main class="main-content">
         <!-- Левая колонка: карта -->
@@ -57,78 +224,11 @@
         </div>
     </div>
 
+    <script src="/static/page.js"></script>
     <script>
-        const token = localStorage.getItem("access_token");
-
-        if (token) {
-            document.getElementById("loginBtn").style.display = "none";
-            document.getElementById("profileBtn").style.display = "block";
-            // При наличии токена сразу запрашиваем профиль для определения роли
-            fetchProfile(token);
-        } else {
-            document.getElementById("loginBtn").style.display = "block";
-            document.getElementById("profileBtn").style.display = "none";
-        }
-
-        document.getElementById("loginBtn").addEventListener("click", function() {
-            window.location.href = "login.html";
+         document.getElementById("statisticBtn").addEventListener("click", function() {
+            window.location.href = "statistic.html";
         });
-
-        document.getElementById("profileBtn").addEventListener("click", function() {
-            const profileModal = document.getElementById("profileModal");
-            profileModal.style.display = "block";
-            // При клике можно также обновить профиль
-            fetchProfile(token);
-        });
-
-        document.getElementById("profile-modal-close").addEventListener("click", function() {
-            document.getElementById("profileModal").style.display = "none";
-        });
-
-        window.addEventListener("click", function(event) {
-            const profileModal = document.getElementById("profileModal");
-            if (event.target === profileModal) {
-                profileModal.style.display = "none";
-            }
-        });
-
-        document.getElementById("logoutBtn").addEventListener("click", function() {
-            localStorage.removeItem("access_token");
-            window.location.reload();
-        });
-
-        // Обработчик для кнопки админки
-        document.getElementById("adminBtn").addEventListener("click", function() {
-            window.location.href = "admin.html";
-        });
-
-        function fetchProfile(token) {
-            fetch("/auth/profile", {
-                method: "GET",
-                headers: {
-                    "Authorization": "Bearer " + token
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Ошибка при получении профиля");
-                }
-                return response.json();
-            })
-            .then(data => {
-                document.getElementById("profileData").textContent = JSON.stringify(data, null, 2);
-                // Если роль пользователя admin, показываем кнопку админки
-                if (data.role && data.role.toLowerCase() === "admin") {
-                    document.getElementById("adminBtn").style.display = "block";
-                } else {
-                    document.getElementById("adminBtn").style.display = "none";
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert("Ошибка загрузки профиля. Возможно, токен устарел.");
-            });
-        }
     </script>
 
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
