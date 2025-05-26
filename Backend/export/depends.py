@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 def serialize_model(instance, depth=0):
     if instance is None:
         return None
@@ -20,7 +21,9 @@ def serialize_model(instance, depth=0):
         for relationship in instance.__mapper__.relationships:
             related = getattr(instance, relationship.key)
             if relationship.uselist:
-                result[relationship.key] = [serialize_model(item, depth + 1) for item in related]
+                result[relationship.key] = [
+                    serialize_model(item, depth + 1) for item in related
+                ]
             else:
                 result[relationship.key] = serialize_model(related, depth + 1)
 
