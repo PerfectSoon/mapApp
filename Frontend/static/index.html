@@ -70,8 +70,8 @@
         }
         /* Секция фильтров */
         .filters-section {
-            width: 90%;
-            max-width: 1300px;
+            width: 65%;
+
             margin: 80px auto 20px; /* Подстраиваем ширину под main-content */
             background: #fff;
             border-radius: 8px;
@@ -123,6 +123,7 @@
             background-color: #e74c3c;
             color: white;
         }
+
         /* Основной контент */
         .main-content {
             width: 100%;
@@ -183,6 +184,14 @@
             <option value="acidic">Кислые (pH < 6.5)</option>
             <option value="neutral">Нейтральные (6.5–7.5)</option>
             <option value="alkaline">Щелочные (pH > 7.5)</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label for="fishFilter">Рыба</label>
+        <select id="fishFilter">
+            <option value="">Все виды</option>
+            <!-- Опции будут добавляться через JS -->
         </select>
     </div>
 

@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let allWaterBodies = [];  // Все водоёмы, полученные с сервера
   let markers = [];         // Текущие маркеры на карте
+  let allFishes = [];       // Все виды рыб из всех водоёмов
   let selectedType = "";    // Выбранный тип водоёма (пустая строка — все)
 
   // Функция для выполнения запроса и получения JSON-данных
@@ -18,45 +19,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     return await response.json();
   }
 
-  // Функция для динамического создания кнопок фильтрации по типу водоёмов
-  function populateTypeFilters() {
-    const typeContainer = document.getElementById('typeFilterContainer');
-    if (!typeContainer) return;
+  // Функция для сбора всех уникальных видов рыб из всех водоёмов
+  function collectAllFishes(waterBodies) {
+    const fishes = new Set();
 
-    typeContainer.innerHTML = "";
-
-    // Кнопка "Все типы"
-    const allButton = document.createElement('button');
-    allButton.className = 'filter-btn';
-    allButton.textContent = "Все типы";
-    allButton.dataset.type = "";
-    allButton.addEventListener('click', function() {
-        document.querySelectorAll('#typeFilterContainer .filter-btn').forEach(btn => btn.classList.remove('active'));
-        this.classList.add('active');
-        filterWaterBodies();
-    });
-    typeContainer.appendChild(allButton);
-
-    // Получаем уникальные типы
-    const types = Array.from(new Set(allWaterBodies.map(wb => {
-        return wb.type && wb.type.name ? wb.type.name : wb.type || '';
-    }))).filter(v => v);
-
-    types.forEach(type => {
-        const btn = document.createElement('button');
-        btn.className = 'filter-btn';
-        btn.textContent = type;
-        btn.dataset.type = type;
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('#typeFilterContainer .filter-btn').forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            filterWaterBodies();
+    waterBodies.forEach(wb => {
+      if (wb.organisms && Array.isArray(wb.organisms)) {
+        wb.organisms.forEach(org => {
+          if (org && org.name) {
+            fishes.add(org.name);
+          }
         });
-        typeContainer.appendChild(btn);
+      }
     });
-}
 
+    return Array.from(fishes).sort();
+  }
 
+  // Функция для заполнения select-фильтра по видам рыб
+  function populateFishFilter() {
+    const fishSelect = document.getElementById('fishFilter');
+    if (!fishSelect) return;
+
+    // Получаем все виды рыб
+    allFishes = collectAllFishes(allWaterBodies);
+
+    // Начальная опция "Все виды"
+    fishSelect.innerHTML = `<option value="">Все виды</option>`;
+
+    // Добавляем каждый вид рыб в выпадающий список
+    allFishes.forEach(fish => {
+      fishSelect.innerHTML += `<option value="${fish}">${fish}</option>`;
+    });
+  }
 
   // Функция для заполнения select-фильтра по регионам на основе БД
   function populateRegionFilter() {
@@ -76,27 +71,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Функция для заполнения select-фильтра по pH (используем предопределённые диапазоны)
-  function populatePhFilter() {
-    const phSelect = document.getElementById('phFilter');
-    if (!phSelect) return;
-    phSelect.innerHTML = `
-      <option value="">Все значения pH</option>
-      <option value="acidic">Кислые (pH < 6.5)</option>
-      <option value="neutral">Нейтральные (6.5–7.5)</option>
-      <option value="alkaline">Щелочные (pH > 7.5)</option>
-    `;
-  }
-
   // Функция обновления всех фильтров (динамических и select)
- function updateFilters(waterBodies = []) { // Значение по умолчанию
+  function updateFilters(waterBodies = []) { // Значение по умолчанию
     // Проверка типа данных
     if (!Array.isArray(waterBodies)) {
         console.error("Ожидается массив водоёмов, получено:", waterBodies);
         waterBodies = [];
     }
 
-    // 3. Обновляем фильтр типов с проверкой элементов
+    // Обновляем фильтр типов с проверкой элементов
     const typeFilter = document.getElementById('typeFilter');
     const types = Array.from(
         new Set(
@@ -115,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         typeFilter.innerHTML += `<option value="${t}">${t}</option>`;
     });
 
-    // 4. Аналогично обновляем фильтр регионов
+    // Аналогично обновляем фильтр регионов
     const regionFilter = document.getElementById('regionFilter');
     const regions = Array.from(
         new Set(
@@ -133,17 +116,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     regions.forEach(r => {
         regionFilter.innerHTML += `<option value="${r}">${r}</option>`;
     });
-}
-function filterWaterBodies() {
+
+    // Обновляем фильтр по рыбам
+    populateFishFilter();
+  }
+
+  function filterWaterBodies() {
     const selectedType = document.getElementById('typeFilter').value;
     const selectedRegion = document.getElementById('regionFilter').value;
     const selectedPhRange = document.getElementById('phFilter').value;
+    const selectedFish = document.getElementById('fishFilter').value;
     const searchText = document.getElementById('searchInput').value.toLowerCase();
 
     const filtered = allWaterBodies.filter(wb => {
         const typeName = wb.type && wb.type.name ? wb.type.name : wb.type || '';
         const regionName = wb.region && wb.region.name ? wb.region.name : wb.region || '';
         const ph = wb.ph !== undefined ? parseFloat(wb.ph) : null;
+
+        // Проверяем наличие выбранной рыбы в водоеме
+        const hasFish = !selectedFish || (
+            wb.organisms &&
+            Array.isArray(wb.organisms) &&
+            wb.organisms.some(org => org && org.name === selectedFish)
+        );
 
         return (
             (!selectedType || typeName === selectedType) &&
@@ -154,12 +149,14 @@ function filterWaterBodies() {
                 (selectedPhRange === 'neutral' && ph >= 6.5 && ph <= 7.5) ||
                 (selectedPhRange === 'alkaline' && ph > 7.5)
             ) &&
-            (!searchText || wb.name.toLowerCase().includes(searchText))
+            (!searchText || wb.name.toLowerCase().includes(searchText)) &&
+            hasFish // Добавляем фильтр по рыбам
         );
     });
 
     updateMap(filtered);
-}
+  }
+
   // Функция обновления боковой панели с карточками и карты (отображает отфильтрованные данные)
   function updateMap(filteredData = null) {
     // Если фильтрованные данные не переданы, используем все данные
@@ -173,56 +170,85 @@ function filterWaterBodies() {
     const waterBodyList = document.getElementById('waterBodyList');
     waterBodyList.innerHTML = '';
 
-    dataToDisplay.forEach(waterBody => {
-      // Создаём карточку для боковой панели
-      const card = document.createElement('div');
-      card.className = 'card';
+    // Если есть данные для отображения
+    if (dataToDisplay.length > 0) {
+      // Создаем границы для центрирования карты на всех маркерах
+      const bounds = L.latLngBounds();
 
-      const title = document.createElement('h2');
-      title.className = 'card__title';
-      title.textContent = waterBody.name || 'Без названия';
-      card.appendChild(title);
+      dataToDisplay.forEach(waterBody => {
+        // Создаём карточку для боковой панели
+        const card = document.createElement('div');
+        card.className = 'card';
 
-      const infoList = document.createElement('ul');
-      infoList.className = 'card__info';
+        const title = document.createElement('h2');
+        title.className = 'card__title';
+        title.textContent = waterBody.name || 'Без названия';
+        card.appendChild(title);
 
-      const typeItem = document.createElement('li');
-      typeItem.textContent = `Тип: ${waterBody.type ? (waterBody.type.name || waterBody.type) : 'Неизвестный'}`;
-      infoList.appendChild(typeItem);
+        const infoList = document.createElement('ul');
+        infoList.className = 'card__info';
 
-      const regionItem = document.createElement('li');
-      regionItem.textContent = `Регион: ${waterBody.region ? (waterBody.region.name || waterBody.region) : 'Неизвестный'}`;
-      infoList.appendChild(regionItem);
+        const typeItem = document.createElement('li');
+        typeItem.textContent = `Тип: ${waterBody.type ? (waterBody.type.name || waterBody.type) : 'Неизвестный'}`;
+        infoList.appendChild(typeItem);
 
-      const depthItem = document.createElement('li');
-      depthItem.textContent = `Глубина: ${waterBody.depth ? waterBody.depth + " м" : '—'}`;
-      infoList.appendChild(depthItem);
+        const regionItem = document.createElement('li');
+        regionItem.textContent = `Регион: ${waterBody.region ? (waterBody.region.name || waterBody.region) : 'Неизвестный'}`;
+        infoList.appendChild(regionItem);
 
-      card.appendChild(infoList);
+        const depthItem = document.createElement('li');
+        depthItem.textContent = `Глубина: ${waterBody.depth ? waterBody.depth + " м" : '—'}`;
+        infoList.appendChild(depthItem);
 
-      // При клике по карточке открываем модальное окно с подробностями
-      card.addEventListener("click", () => {
-        openModal(waterBody);
+
+
+        card.appendChild(infoList);
+
+        // При клике по карточке открываем модальное окно с подробностями
+        card.addEventListener("click", () => {
+          openModal(waterBody);
+        });
+        waterBodyList.appendChild(card);
+
+        // Добавляем маркер на карту
+        try {
+          if (waterBody.latitude && waterBody.longitude) {
+            const marker = L.marker([waterBody.latitude, waterBody.longitude]).addTo(map);
+            const waterBodyType = waterBody.type ? (waterBody.type.name || waterBody.type) : "Неизвестный тип";
+
+            // Форматируем список рыб для показа в попапе
+            let fishList = 'Нет данных';
+            if (waterBody.organisms && waterBody.organisms.length > 0) {
+              fishList = waterBody.organisms.map(org => org.name).join(", ");
+            }
+
+            marker.bindPopup(`
+              <b>${waterBody.name}</b><br>
+              Тип: ${waterBodyType}<br>
+              Глубина: ${waterBody.depth ? waterBody.depth + " м" : '—'}<br>
+              Рыбы: ${fishList}
+            `);
+            markers.push(marker);
+
+            // Расширяем границы для включения этого маркера
+            bounds.extend([waterBody.latitude, waterBody.longitude]);
+          }
+        } catch (error) {
+          console.error("Ошибка при добавлении маркера:", error, waterBody);
+        }
       });
-      waterBodyList.appendChild(card);
 
-      // Добавляем маркер на карту
-      try {
-        const marker = L.marker([waterBody.latitude, waterBody.longitude]).addTo(map);
-        const organismNames = waterBody.organisms ? waterBody.organisms.map(org => org.name).join(", ") : "Нет данных";
-        const waterBodyType = waterBody.type ? (waterBody.type.name || waterBody.type) : "Неизвестный тип";
-
-        marker.bindPopup(`
-          <b>${waterBody.name}</b><br>
-          Тип: ${waterBodyType}<br>
-          Глубина: ${waterBody.depth} м<br>
-          Организмы: ${organismNames}
-        `);
-        markers.push(marker);
-      } catch (error) {
-        console.error("Ошибка при добавлении маркера:", error, waterBody);
+      // Если есть маркеры, центрируем карту на их границах
+      if (markers.length > 0) {
+        map.fitBounds(bounds, { padding: [50, 50] });
       }
-    });
+    } else {
+      // Если нет водоемов для отображения, показываем сообщение
+      const noDataMessage = document.createElement('div');
+      noDataMessage.className = 'no-data-message';
+      noDataMessage.textContent = 'Нет водоемов, соответствующих заданным критериям';
+      waterBodyList.appendChild(noDataMessage);
+    }
   }
 
   // Функция открытия модального окна с подробной информацией о водоёме
@@ -230,13 +256,19 @@ function filterWaterBodies() {
     const modal = document.getElementById("modal");
     const modalBody = document.getElementById("modal-body");
 
+    // Форматируем список рыб для вывода
+    let fishList = 'Нет данных';
+    if (waterBody.organisms && waterBody.organisms.length > 0) {
+      fishList = waterBody.organisms.map(org => org.name).join(", ");
+    }
+
     modalBody.innerHTML = `
       <h2>${waterBody.name}</h2>
       <p><strong>Тип:</strong> ${waterBody.type ? (waterBody.type.name || waterBody.type) : 'Неизвестный'}</p>
       <p><strong>Регион:</strong> ${waterBody.region ? (waterBody.region.name || waterBody.region) : 'Неизвестный'}</p>
       <p><strong>Глубина:</strong> ${waterBody.depth || '—'} м</p>
       <p><strong>Координаты:</strong> ${waterBody.latitude}, ${waterBody.longitude}</p>
-      <p><strong>Организмы:</strong> ${waterBody.organisms ? waterBody.organisms.map(org => org.name).join(", ") : 'Нет данных'}</p>
+      <p><strong>Рыбы:</strong> ${fishList}</p>
     `;
     modal.style.display = "block";
   }
@@ -266,23 +298,19 @@ function filterWaterBodies() {
     } catch (error) {
         console.error("Ошибка загрузки водоёмов:", error);
     }
-}
+  }
 
   document.getElementById("applyFilterBtn").addEventListener("click", filterWaterBodies);
   document.getElementById("resetFilterBtn").addEventListener("click", function() {
-    // Сброс кнопок типа
-    document.querySelectorAll('#typeFilterContainer .filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.type === "") btn.classList.add('active');
-    });
-
-    // Сброс других фильтров
+    // Сброс всех фильтров
+    document.getElementById('typeFilter').value = "";
     document.getElementById('regionFilter').value = "";
     document.getElementById('phFilter').value = "";
+    document.getElementById('fishFilter').value = ""; // Сбрасываем фильтр по рыбам
     document.getElementById('searchInput').value = "";
 
     filterWaterBodies();
-});
+  });
 
   // Экспорт JSON с данными (если есть кнопка с id "exportBtn")
   const exportBtn = document.getElementById("exportBtn");

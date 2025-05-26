@@ -32,9 +32,15 @@ function updateInfoSection(filteredData) {
             ? (filteredData.reduce((sum, wb) => sum + (wb.biodiversity_index || 0), 0) / total).toFixed(2)
             : 0;
 
-        const totalSpecies = filteredData.reduce((sum, wb) => {
-            return sum + (Array.isArray(wb.organisms) ? wb.organisms.length : 0);
-        }, 0);
+        const uniqueSpeciesSet = new Set();
+        filteredData.forEach(wb => {
+            if (Array.isArray(wb.organisms)) {
+                wb.organisms.forEach(org => {
+                    uniqueSpeciesSet.add(org.id);  // или org.name, если id отсутствует
+                });
+            }
+        });
+        const totalSpecies = uniqueSpeciesSet.size;
 
         // Обновляем DOM
         const formatValue = (value) => value.toLocaleString('ru-RU');
@@ -357,4 +363,5 @@ document.getElementById("resetFilterBtn").addEventListener("click", function() {
     // После сброса фильтров выводим все водоёмы
     updateTable(allWaterBodies);
     compareSelectedWaterBodies();
+    filterWaterBodies();
 });
