@@ -9,13 +9,13 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from database.database import Base, engine, SessionLocal
-from water_bodies import water_bodies
-from statistic import statistic
-from export import export
-from user import auth_router
-from seed import populate_db
-from user.create_admin import create_admin
+from Backend.database.database import Base, engine, SessionLocal
+from Backend.water_bodies import water_bodies
+from Backend.statistic import statistic
+from Backend.export import export
+from Backend.user import auth_router
+from Backend.seed import populate_db
+from Backend.user.create_admin import create_admin
 
 
 @asynccontextmanager
@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        #populate_db(db)
+        # populate_db(db)
         create_admin(db)
     finally:
         db.close()
@@ -33,7 +33,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Интерактивные карты водоемов",
     lifespan=lifespan,
-
 )
 app.add_middleware(
     CORSMiddleware,
@@ -54,7 +53,7 @@ app.include_router(auth_router.router, prefix="/auth", tags=["auth"])
 app.include_router(statistic.router, prefix="/statistics", tags=["statistics"])
 
 
-app.mount("/static", StaticFiles(directory=STATIC_DIR,  html=True), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR, html=True), name="static")
 
 
 @app.get("/")
@@ -64,4 +63,4 @@ async def serve_index():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    uvicorn.run("main:app", reload=True)
+    uvicorn.run("main:app", reload=True, port=8001)

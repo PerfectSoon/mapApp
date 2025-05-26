@@ -1,12 +1,25 @@
 from sqlalchemy.orm import Session
-from database.models import WaterBody, Organism, OrganismType, WaterBodyType, Status, Region
+from Backend.database.models import (
+    WaterBody,
+    Organism,
+    OrganismType,
+    WaterBodyType,
+    Status,
+    Region,
+)
 
 
 def populate_db(db: Session):
     try:
         # 1. Создаем регионы
 
-        regions_data = ["Центральный", "Северо-Западный", "Южный", "Сибирский", "Дальневосточный"]
+        regions_data = [
+            "Центральный",
+            "Северо-Западный",
+            "Южный",
+            "Сибирский",
+            "Дальневосточный",
+        ]
         regions = []
         for name in regions_data:
             region = Region(name=name)
@@ -37,19 +50,19 @@ def populate_db(db: Session):
             name="Карп",
             species="Cyprinus carpio",
             description="Общераспространённая рыба.",
-            organism_type_id=org_types[0].id
+            organism_type_id=org_types[0].id,
         )
         org2 = Organism(
             name="Щука",
             species="Esox lucius",
             description="Хищная рыба.",
-            organism_type_id=org_types[0].id
+            organism_type_id=org_types[0].id,
         )
         org3 = Organism(
             name="Водоросль А",
             species="Chlorella vulgaris",
             description="Микроскопическая водоросль.",
-            organism_type_id=org_types[1].id
+            organism_type_id=org_types[1].id,
         )
         db.add_all([org1, org2, org3])
         db.commit()
@@ -69,7 +82,7 @@ def populate_db(db: Session):
             region_id=region_sibir.id if region_sibir else None,
             ph=7.5,
             biodiversity_index=4.8,
-            ecological_status=Status.great.value  # "Отличный"
+            ecological_status=Status.great.value,  # "Отличный"
         )
         wb2 = WaterBody(
             name="Река Волга",
@@ -81,7 +94,7 @@ def populate_db(db: Session):
             region_id=region_central.id if region_central else None,
             ph=7.2,
             biodiversity_index=3.9,
-            ecological_status=Status.good.value  # "Хороший"
+            ecological_status=Status.good.value,  # "Хороший"
         )
         db.add_all([wb1, wb2])
         db.commit()
@@ -91,8 +104,6 @@ def populate_db(db: Session):
         wb1.organisms.append(org3)
         wb2.organisms.append(org2)
         db.commit()
-
-
 
         print("Seeding completed!")
     except Exception as e:

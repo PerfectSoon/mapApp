@@ -1,22 +1,26 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from database.models import Status
+from Backend.database.models import Status
 
 
 class WaterBodyCompareRequest(BaseModel):
     water_body_ids: List[int]
 
+
 class WaterBodyTypeBase(BaseModel):
     name: str
 
+
 class WaterBodyTypeCreate(WaterBodyTypeBase):
     pass
+
 
 class WaterBodyTypeOut(WaterBodyTypeBase):
     id: int
 
     class Config:
         from_attributes = True
+
 
 class WaterBodyRegion(BaseModel):
     id: int
@@ -25,11 +29,14 @@ class WaterBodyRegion(BaseModel):
     class Config:
         from_attributes = True
 
+
 class OrganismTypeBase(BaseModel):
     name: str
 
+
 class OrganismTypeCreate(OrganismTypeBase):
     pass
+
 
 class OrganismTypeOut(OrganismTypeBase):
     id: int
@@ -43,6 +50,7 @@ class OrganismBase(BaseModel):
     species: str
     description: Optional[str] = None
 
+
 class OrganismCreate(OrganismBase):
 
     organism_type_id: int
@@ -55,6 +63,7 @@ class WaterBodyShortOut(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class OrganismOut(OrganismBase):
     id: int
@@ -75,6 +84,7 @@ class WaterBodyBase(BaseModel):
     biodiversity_index: float
     ecological_status: Status
 
+
 class WaterBodyCreate(WaterBodyBase):
     type_id: int
     region_id: int
@@ -88,6 +98,7 @@ class OrganismShortOut(BaseModel):
     class Config:
         from_attributes = True
 
+
 class WaterBodyOut(WaterBodyBase):
     id: int
     type: WaterBodyTypeOut
@@ -96,4 +107,3 @@ class WaterBodyOut(WaterBodyBase):
 
     class Config:
         from_attributes = True
-

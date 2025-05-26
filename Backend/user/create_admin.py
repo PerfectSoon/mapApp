@@ -1,8 +1,14 @@
 from sqlalchemy.orm import Session
-from database.models import User
-from user.security import get_password_hash
+from Backend.database.models import User
+from Backend.user.security import get_password_hash
 
-def create_admin(db: Session, email: str = "admin@mail.com", password: str ="admin", role: str = "admin"):
+
+def create_admin(
+    db: Session,
+    email: str = "admin@mail.com",
+    password: str = "admin",
+    role: str = "admin",
+):
     user_db = db.query(User).filter(User.email == email, User.role == role).first()
     if not user_db:
         hashed = get_password_hash(password)
