@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 from Backend.database.database import Base, engine, SessionLocal
 from Backend.water_bodies import water_bodies
@@ -56,9 +57,9 @@ app.include_router(statistic.router, prefix="/statistics", tags=["statistics"])
 app.mount("/static", StaticFiles(directory=STATIC_DIR, html=True), name="static")
 
 
-@app.get("/")
-async def serve_index():
-    return FileResponse(INDEX_PATH)
+@app.get("/", include_in_schema=False)
+async def root():
+    return RedirectResponse(url="/static/login.html")
 
 
 if __name__ == "__main__":
