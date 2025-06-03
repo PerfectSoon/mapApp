@@ -16,6 +16,12 @@
       <input type="email" id="registerEmail" placeholder="Введите ваш email" required>
       <label for="registerPassword">Пароль:</label>
       <input type="password" id="registerPassword" placeholder="Введите пароль" required>
+       <label for="registerRole">Роль:</label>
+      <select id="registerRole" required>
+        <option value="" disabled selected>Выберите роль</option>
+        <option value="scientific">Научный сотрудник</option>
+        <option value="user">Гость</option>
+      </select>
       <button type="submit">Зарегистрироваться</button>
       <a href="login.html" id="loginLink"  class="centered-link">Уже есть аккаунт? Нажмите для входа</a>
     </form>
