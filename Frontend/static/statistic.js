@@ -1,367 +1,289 @@
-// Функция для выполнения запроса и получения JSON-данных
-async function fetchData(url, options = {}) {
-    const response = await fetch(url, options);
-    if (!response.ok) {
-        throw new Error(`Ошибка запроса ${url}: ${response.statusText}`);
-    }
-    return await response.json();
-}
-
-// Глобальный массив для сохранения загруженных водоёмов (при необходимости)
-let allWaterBodies = [];
-let filteredData = [];
-let sortState = { column: null, direction: 'asc' };
-
-// Функция для загрузки списка водоёмов и заполнения таблицы
-async function loadWaterBodies() {
-    try {
-        allWaterBodies = await fetchData('/water_bodies/search');
-        filteredData = [...allWaterBodies];
-        updateFilters(allWaterBodies);
-        applyCurrentSort();
-        updateInfoSection(filteredData);
-    } catch (error) {
-        console.error("Ошибка загрузки:", error);
-    }
-}
-function updateInfoSection(filteredData) {
-    try {
-        // Рассчитываем статистику на клиенте
-        const total = filteredData.length;
-        const avgBioIndex = total > 0
-            ? (filteredData.reduce((sum, wb) => sum + (wb.biodiversity_index || 0), 0) / total).toFixed(2)
-            : 0;
-
-        const uniqueSpeciesSet = new Set();
-        filteredData.forEach(wb => {
-            if (Array.isArray(wb.organisms)) {
-                wb.organisms.forEach(org => {
-                    uniqueSpeciesSet.add(org.id);  // или org.name, если id отсутствует
-                });
-            }
-        });
-        const totalSpecies = uniqueSpeciesSet.size;
-
-        // Обновляем DOM
-        const formatValue = (value) => value.toLocaleString('ru-RU');
-
-        document.querySelector('.info-card:nth-child(1) .info-value').textContent = formatValue(total);
-        document.querySelector('.info-card:nth-child(2) .info-value').textContent = avgBioIndex;
-        document.querySelector('.info-card:nth-child(3) .info-value').textContent = formatValue(totalSpecies);
-
-    } catch (error) {
-        console.error("Ошибка обновления информации:", error);
-    }
-}
-
-
-
-// Инициализация графика сравнения выбранных водоёмов как группированный столбчатый график
-const ctxComparison = document.getElementById('comparisonChart').getContext('2d');
-let comparisonChart = new Chart(ctxComparison, {
-    type: 'bar',
-    data: {
-        labels: [], // Имена выбранных водоёмов
+// statistic.js
+document.addEventListener('DOMContentLoaded', async () => {
+  // 0. Подготовка: инициализируем chart до всего остального
+  const canvas = document.getElementById('comparisonChart');
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    window.comparisonChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: [],
         datasets: [
-            {
-                label: 'pH',
-                data: [],
-                backgroundColor: 'rgba(54, 162, 235, 0.7)'
-            },
-            {
-                label: 'Количество видов',
-                data: [],
-                backgroundColor: 'rgba(255, 159, 64, 0.7)'
-            },
-            {
-                label: 'Индекс биоразнообразия',
-                data: [],
-                backgroundColor: 'rgba(75, 192, 192, 0.7)'
-            },
-            {
-                label: 'Глубина',
-                data: [],
-                backgroundColor: 'rgba(153, 102, 255, 0.7)'
-            }
+          { label: 'pH',                data: [], backgroundColor: 'rgba(54,162,235,0.7)' },
+          { label: 'Количество видов',  data: [], backgroundColor: 'rgba(255,159,64,0.7)' },
+          { label: 'Индекс биоразнообразия', data: [], backgroundColor: 'rgba(75,192,192,0.7)' },
+          { label: 'Глубина',           data: [], backgroundColor: 'rgba(153,102,255,0.7)' }
         ]
-    },
-    options: {
+      },
+      options: {
         responsive: true,
         plugins: { legend: { position: 'top' } },
         scales: {
-            x: { title: { display: true, text: 'Название водоёма' } },
-            y: { beginAtZero: true, title: { display: true, text: 'Значения' } }
+          x: { title: { display: true, text: 'Название водоёма' } },
+          y: { beginAtZero: true,       title: { display: true, text: 'Значения' } }
         }
-    }
-});
-// Функция для обновления таблицы с водоёмами
-function updateTable(data) {
-    const tbody = document.getElementById('waterBodyData');
-    tbody.innerHTML = ''; // Очистка таблицы
-
-    const statusDictionary = {
-        // Английские ключи -> Русские значения
-        'great': 'Отличный',
-        'good': 'Хороший',
-        'avg': 'Средний',
-        'low': 'Низкий',
-
-        // Русские значения -> Английские ключи (для обратного преобразования)
-        'отличный': 'great',
-        'хороший': 'good',
-        'средний': 'avg',
-        'низкий': 'low'
-    };
-
-    data.forEach(wb => {
-        const typeName = wb.type && wb.type.name ? wb.type.name : wb.type || '';
-        const regionName = wb.region && wb.region.name ? wb.region.name : wb.region || '';
-        const speciesCount = Array.isArray(wb.organisms) ? wb.organisms.length : 0;
-
-        const rawStatus = (wb.ecological_status || '').toString().trim().toLowerCase();
-
-        let statusKey = statusDictionary[rawStatus] || rawStatus;
-        if (statusDictionary[statusKey]) {
-            statusText = statusDictionary[statusKey];
-        } else {
-            const reverseKey = Object.entries(statusDictionary).find(
-                ([key, val]) => val.toLowerCase() === rawStatus
-            )?.[0];
-            statusKey = reverseKey || rawStatus;
-            statusText = statusDictionary[statusKey] || rawStatus;
-        }
-
-        const statusClass = statusKey in statusDictionary ? `status-${statusKey}` : 'status-unknown';
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><input type="checkbox" class="waterbody-checkbox" value="${wb.id}"></td>
-            <td>${wb.name}</td>
-            <td>${typeName}</td>
-            <td>${regionName}</td>
-            <td>${wb.ph}</td>
-            <td>${speciesCount}</td>
-            <td>${wb.biodiversity_index}</td>
-            <td>
-                <span class="status-badge ${statusClass}">
-                    ${statusText}
-                </span>
-            </td>
-        `;
-        tbody.appendChild(row);
+      }
     });
+  }
 
-    document.querySelector('.data-count').innerText = `(всего: ${data.length})`;
-}
-function sortData(data) {
-    if (!sortState.column) return data;
+  // 1. Проверка токена
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    window.location.replace("login.html");
+    return;
+  }
 
-    return data.sort((a, b) => {
-        let valueA, valueB;
+  // 2. Header-кнопки
+  const loginBtn   = document.getElementById("loginBtn");
+  const profileBtn = document.getElementById("profileBtn");
+  const logoutBtn  = document.getElementById("logoutBtn");
+  if (loginBtn)   loginBtn.style.display   = "none";
+  if (profileBtn) profileBtn.style.display = "block";
+  if (logoutBtn)  logoutBtn.style.display  = "inline-block";
 
-        switch(sortState.column) {
-            case 4: // pH
-                valueA = parseFloat(a.ph) || 0;
-                valueB = parseFloat(b.ph) || 0;
-                break;
-            case 5: // Количество видов
-                valueA = Array.isArray(a.organisms) ? a.organisms.length : 0;
-                valueB = Array.isArray(b.organisms) ? b.organisms.length : 0;
-                break;
-            case 6: // Индекс биоразнообразия
-                valueA = parseFloat(a.biodiversity_index) || 0;
-                valueB = parseFloat(b.biodiversity_index) || 0;
-                break;
-            default:
-                return 0;
-        }
+  profileBtn?.addEventListener("click", () => {
+    const modal = document.getElementById("profileModal");
+    if (modal) modal.style.display = "block";
+    fetchProfile();
+  });
+  logoutBtn?.addEventListener("click", () => {
+    localStorage.removeItem("access_token");
+    window.location.replace("login.html");
+  });
 
-        return sortState.direction === 'asc' ? valueA - valueB : valueB - valueA;
+  // 3. Загрузка всех водоёмов
+  let allWaterBodies = [];
+  try {
+    allWaterBodies = await Common.fetchData("/water_bodies/search", {
+      headers: { "Authorization": "Bearer " + token }
     });
-}
+  } catch (err) {
+    console.error("Не удалось загрузить водоёмы:", err);
+    return alert("Ошибка загрузки данных");
+  }
 
-// Функция для обработки кликов по заголовкам
-function handleSort(columnIndex) {
-    if (sortState.column === columnIndex) {
-        sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortState.column = columnIndex;
-        sortState.direction = 'asc';
-    }
+  // 4. Переменные фильтра/сортировки
+  let filteredData = [...allWaterBodies];
+  let sortState = { column: null, direction: "asc" };
 
-    // Обновляем UI сортировки
-    document.querySelectorAll('th.sortable').forEach(th => {
-        th.classList.remove('sorted-asc', 'sorted-desc');
-    });
+  // 5. Инициализация UI
+  updateFilters(allWaterBodies);
+  updateInfoSection(filteredData);
+  updateTable(filteredData);
+  initSorting();
+  compareSelectedWaterBodies();
 
-    const header = document.querySelector(`th[data-column="${sortState.column}"]`);
-    if (header) {
-        header.classList.add(`sorted-${sortState.direction}`);
-    }
-
-    applyCurrentSort();
-}
-
-
-function updateFilters(waterBodies) {
-    // Получаем уникальные типы, регионы и диапазоны pH
-    const types = Array.from(new Set(waterBodies.map(wb => {
-        return wb.type && wb.type.name ? wb.type.name : wb.type || '';
-    }))).filter(v => v);
-    const regions = Array.from(new Set(waterBodies.map(wb => {
-        return wb.region && wb.region.name ? wb.region.name : wb.region || '';
-    }))).filter(v => v);
-    const phValues = Array.from(new Set(waterBodies.map(wb => wb.ph))).filter(v => v !== undefined);
-
-    // Обновляем select для типов
-    const typeFilter = document.getElementById('typeFilter');
-    typeFilter.innerHTML = `<option value="">Все типы</option>`;
-    types.forEach(t => {
-        typeFilter.innerHTML += `<option value="${t}">${t}</option>`;
-    });
-
-    // Обновляем select для регионов
-    const regionFilter = document.getElementById('regionFilter');
-    regionFilter.innerHTML = `<option value="">Все регионы</option>`;
-    regions.forEach(r => {
-        regionFilter.innerHTML += `<option value="${r}">${r}</option>`;
-    });
-
-    // Обновляем select для pH (например, сортируем уникальные значения)
-   const phFilter = document.getElementById('phFilter');
-    phFilter.innerHTML = `
-        <option value="">Все значения</option>
-        <option value="acidic">Кислые (pH < 6.5)</option>
-        <option value="neutral">Нейтральные (6.5–7.5)</option>
-        <option value="alkaline">Щелочные (pH > 7.5)</option>
-    `;
-}
-
-function filterWaterBodies() {
-    // Получаем значения фильтров
-    const selectedType = document.getElementById('typeFilter').value;
-    const selectedRegion = document.getElementById('regionFilter').value;
-    const selectedPhRange = document.getElementById('phFilter').value;
-    const searchText = document.getElementById('searchInput').value.toLowerCase();
-
-    const filtered = allWaterBodies.filter(wb => {
-        const typeName = wb.type && wb.type.name ? wb.type.name : wb.type || '';
-        const regionName = wb.region && wb.region.name ? wb.region.name : wb.region || '';
-        const ph = wb.ph !== undefined ? wb.ph.toString() : '';
-
-        // Проверка фильтра по типу, региону, pH и поисковому тексту по названию
-        const typeMatch = selectedType ? (typeName === selectedType) : true;
-        const regionMatch = selectedRegion ? (regionName === selectedRegion) : true;
-        let phMatch = true;
-        if (selectedPhRange) {
-            const ph = parseFloat(wb.ph);
-            switch(selectedPhRange) {
-                case 'acidic':
-                    phMatch = ph < 6.5;
-                    break;
-                case 'neutral':
-                    phMatch = ph >= 6.5 && ph <= 7.5;
-                    break;
-                case 'alkaline':
-                    phMatch = ph > 7.5;
-                    break;
-            }
-        }
-        const searchMatch = searchText ? wb.name.toLowerCase().includes(searchText) : true;
-
-        return typeMatch && regionMatch && phMatch && searchMatch;
-    });
-    applyCurrentSort();
-    updateTable(filtered);
-    updateInfoSection(filtered);
-    compareSelectedWaterBodies();
-
-    sortState = { column: null, direction: 'asc' };
-    document.querySelectorAll('th.sortable').forEach(th => {
-        th.classList.remove('sorted-asc', 'sorted-desc');
-    });
-}
-
-function applyCurrentSort() {
-    const sorted = sortData([...filteredData]);
-    updateTable(sorted);
-}
-// Функция для сравнения выбранных водоёмов (обновлённая версия)
-async function compareSelectedWaterBodies() {
-    const checkboxes = document.querySelectorAll('#waterBodyData input[type="checkbox"]:checked');
-    const ids = Array.from(checkboxes).map(cb => parseInt(cb.value));
-
-    if (ids.length === 0) {
-        comparisonChart.data.labels = [];
-        comparisonChart.data.datasets.forEach(ds => ds.data = []);
-        comparisonChart.update();
-        return;
-    }
-
-    try {
-        // Эндпоинт возвращает расширенные данные: { id, name, ph, depth, organisms_count, biodiversity_index, ... }
-        const compareData = await fetchData('/statistics/compare', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ water_body_ids: ids })
-        });
-
-        // Собираем данные для графика: имена и параметры
-        const names = compareData.map(wb => wb.name);
-        const phValues = compareData.map(wb => wb.ph);
-        // Если organisms_count отсутствует, рассчитываем по массиву organisms (если есть)
-        const speciesCounts = compareData.map(wb => wb.organisms_count !== undefined ? wb.organisms_count : (Array.isArray(wb.organisms) ? wb.organisms.length : 0));
-        const biodIndices = compareData.map(wb => wb.biodiversity_index);
-        const depths = compareData.map(wb => wb.depth);
-
-        comparisonChart.data.labels = names;
-        comparisonChart.data.datasets[0].data = phValues;
-        comparisonChart.data.datasets[1].data = speciesCounts;
-        comparisonChart.data.datasets[2].data = biodIndices;
-        comparisonChart.data.datasets[3].data = depths;
-        comparisonChart.update();
-
-    } catch (error) {
-        console.error("Ошибка при сравнении водоёмов:", error);
-    }
-}
-// Автоматически запускаем загрузку водоёмов после загрузки страницы
-document.addEventListener('DOMContentLoaded', async function() {
-    await loadWaterBodies();
-    // Если какие-то водоёмы уже выбраны (например, при экспорте), можно сразу запустить сравнение
-    compareSelectedWaterBodies();
-});
-
-// Используем делегирование событий: при изменении любого чекбокса в таблице запускаем сравнение
-document.getElementById('waterBodyData').addEventListener('change', function(event) {
-    if (event.target.matches('input[type="checkbox"]')) {
-        compareSelectedWaterBodies();
-    }
-});
-
-// Дополнительно: обработчики для других кнопок, например экспорт
-document.getElementById("statisticBtn").addEventListener("click", function() {
-    window.location.href = "index.html";
-});
-if (document.getElementById("exportBtn")) {
-    document.getElementById("exportBtn").addEventListener("click", () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allWaterBodies, null, 2));
-        const downloadAnchor = document.createElement("a");
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "water_bodies.json");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        document.body.removeChild(downloadAnchor);
-    });
-}
-document.getElementById("applyFilterBtn").addEventListener("click", filterWaterBodies);
-document.getElementById("resetFilterBtn").addEventListener("click", function() {
-    document.getElementById("typeFilter").value = "";
+  // 6. Навешиваем события
+  document.getElementById("applyFilterBtn")?.addEventListener("click", filterAndRender);
+  document.getElementById("resetFilterBtn")?.addEventListener("click", () => {
+    document.getElementById("typeFilter").value   = "";
     document.getElementById("regionFilter").value = "";
-    document.getElementById("phFilter").value = "";
-    document.getElementById("searchInput").value = "";
-    // После сброса фильтров выводим все водоёмы
-    updateTable(allWaterBodies);
+    document.getElementById("phFilter").value     = "";
+    document.getElementById("searchInput").value  = "";
+    filteredData = [...allWaterBodies];
+    sortState = { column: null, direction: "asc" };
+    clearSortIndicators();
+    updateInfoSection(filteredData);
+    updateTable(filteredData);
     compareSelectedWaterBodies();
-    filterWaterBodies();
+  });
+  document.getElementById("waterBodyData")?.addEventListener("change", event => {
+    if (event.target.matches("input[type=checkbox]")) {
+      compareSelectedWaterBodies();
+    }
+  });
+  document.getElementById("statisticBtn")?.addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
+
+  // 7. Экспорт через common.js
+  Common.initExport({
+    btnId:            "exportBtn",
+    modalId:          "exportModal",
+    listId:           "exportList",
+    searchId:         "exportSearch",
+    closeBtnId:       "export-modal-close",
+    cancelBtnId:      "exportCancelBtn",
+    confirmBtnId:     "exportConfirmBtn",
+    fetchListEndpoint:"/water_bodies/search",
+    exportEndpoint:   "/export/json",
+    authHeaderFactory:() => ({
+      "Authorization": "Bearer " + localStorage.getItem("access_token")
+    })
+  });
+
+  // --- Функции ниже ---
+
+  function fetchProfile() {
+    Common.fetchData("/auth/profile", {
+      headers: { "Authorization": "Bearer " + token }
+    })
+    .then(data => {
+      const emailEl = document.getElementById("profileEmail");
+      const roleEl  = document.getElementById("profileRole");
+      if (emailEl) emailEl.textContent = data.email;
+      if (roleEl)  roleEl.textContent = formatRole(data.role);
+    })
+    .catch(err => {
+      console.warn("fetchProfile:", err);
+      if (err.message.includes("401") || err.message.includes("403")) {
+        localStorage.removeItem("access_token");
+        alert("Сессия истекла, войдите снова.");
+        window.location.replace("login.html");
+      }
+    });
+  }
+
+  function formatRole(r) {
+    if (r === "admin")      return "Администратор";
+    if (r === "scientific") return "Научный сотрудник";
+    if (r === "user")       return "Гость";
+    return r || "неизвестно";
+  }
+
+  function updateFilters(data) {
+    const types   = [...new Set(data.map(wb => wb.type?.name || wb.type))].filter(Boolean);
+    const regions = [...new Set(data.map(wb => wb.region?.name || wb.region))].filter(Boolean);
+    document.getElementById("typeFilter").innerHTML = `<option value="">Все типы</option>` +
+      types.map(t => `<option>${t}</option>`).join("");
+    document.getElementById("regionFilter").innerHTML = `<option value="">Все регионы</option>` +
+      regions.map(r => `<option>${r}</option>`).join("");
+    document.getElementById("phFilter").innerHTML = `
+      <option value="">Все значения</option>
+      <option value="acidic">Кислые (pH < 6.5)</option>
+      <option value="neutral">Нейтральные (6.5–7.5)</option>
+      <option value="alkaline">Щелочные (pH > 7.5)</option>
+    `;
+  }
+
+  function updateInfoSection(data) {
+    const total = data.length;
+    const avg = total
+      ? (data.reduce((s, wb) => s + (wb.biodiversity_index || 0), 0) / total).toFixed(2)
+      : 0;
+    const speciesSet = new Set();
+    data.forEach(wb => (wb.organisms || []).forEach(o => speciesSet.add(o.id)));
+    document.querySelector('.info-card:nth-child(1) .info-value').textContent = total.toLocaleString("ru-RU");
+    document.querySelector('.info-card:nth-child(2) .info-value').textContent = avg;
+    document.querySelector('.info-card:nth-child(3) .info-value').textContent = speciesSet.size.toLocaleString("ru-RU");
+  }
+
+  function updateTable(data) {
+    filteredData = data;
+    const tbody = document.getElementById("waterBodyData");
+    tbody.innerHTML = "";
+    const dict = { great:"Отличный", good:"Хороший", avg:"Средний", low:"Низкий" };
+    data.forEach(wb => {
+      const typeName = wb.type?.name || wb.type || "";
+      const region   = wb.region?.name || wb.region || "";
+      const species  = (wb.organisms || []).length;
+      const raw      = (wb.ecological_status || "").toLowerCase();
+      const key      = dict[raw] ? raw : Object.entries(dict).find(([,v]) => v.toLowerCase()===raw)?.[0] || raw;
+      const text     = dict[key] || raw;
+      const cls      = `status-${key}`;
+      const row = tbody.insertRow();
+      row.innerHTML = `
+        <td><input type="checkbox" value="${wb.id}"></td>
+        <td>${wb.name}</td>
+        <td>${typeName}</td>
+        <td>${region}</td>
+        <td>${wb.ph}</td>
+        <td>${species}</td>
+        <td>${wb.biodiversity_index ?? ""}</td>
+        <td><span class="status-badge ${cls}">${text}</span></td>
+      `;
+    });
+    document.querySelector(".data-count").innerText = `(всего: ${data.length})`;
+  }
+
+  function initSorting() {
+    document.querySelectorAll("th.sortable").forEach(th => {
+      th.addEventListener("click", () => {
+        const col = +th.dataset.column;
+        if (sortState.column === col) {
+          sortState.direction = sortState.direction==="asc" ? "desc" : "asc";
+        } else {
+          sortState.column = col;
+          sortState.direction = "asc";
+        }
+        clearSortIndicators();
+        th.classList.add(`sorted-${sortState.direction}`);
+        applySort();
+      });
+    });
+  }
+
+  function clearSortIndicators() {
+    document.querySelectorAll("th.sortable").forEach(th => {
+      th.classList.remove("sorted-asc","sorted-desc");
+    });
+  }
+
+  function applySort() {
+    const sorted = [...filteredData].sort((a,b) => {
+      let aV=0, bV=0;
+      switch(sortState.column) {
+        case 4: aV = +a.ph; bV = +b.ph; break;
+        case 5: aV = (a.organisms||[]).length; bV = (b.organisms||[]).length; break;
+        case 6: aV = +a.biodiversity_index||0; bV = +b.biodiversity_index||0; break;
+      }
+      return sortState.direction==="asc" ? aV - bV : bV - aV;
+    });
+    updateTable(sorted);
+  }
+
+  function filterAndRender() {
+    const t = document.getElementById("typeFilter").value;
+    const r = document.getElementById("regionFilter").value;
+    const p = document.getElementById("phFilter").value;
+    const q = document.getElementById("searchInput").value.trim().toLowerCase();
+
+    filteredData = allWaterBodies.filter(wb => {
+      if (t && (wb.type?.name||wb.type) !== t) return false;
+      if (r && (wb.region?.name||wb.region) !== r) return false;
+      const phv = +wb.ph;
+      if (p==="acidic"   && phv>=6.5) return false;
+      if (p==="neutral"  && (phv<6.5||phv>7.5)) return false;
+      if (p==="alkaline" && phv<=7.5) return false;
+      if (q && !wb.name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    sortState = { column: null, direction: "asc" };
+    clearSortIndicators();
+    updateInfoSection(filteredData);
+    updateTable(filteredData);
+    compareSelectedWaterBodies();
+  }
+
+  async function compareSelectedWaterBodies() {
+    const ids = Array.from(document.querySelectorAll('#waterBodyData input:checked'))
+                     .map(cb => +cb.value);
+    const chart = window.comparisonChart;
+    if (!chart) return;
+    if (!ids.length) {
+      chart.data.labels = [];
+      chart.data.datasets.forEach(ds => ds.data = []);
+      return chart.update();
+    }
+    try {
+      const resp = await Common.fetchData("/statistics/compare", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ water_body_ids: ids })
+      });
+      chart.data.labels = resp.map(wb => wb.name);
+      chart.data.datasets[0].data = resp.map(wb => wb.ph);
+      chart.data.datasets[1].data = resp.map(wb =>
+        wb.organisms_count != null ? wb.organisms_count : (wb.organisms||[]).length
+      );
+      chart.data.datasets[2].data = resp.map(wb => wb.biodiversity_index);
+      chart.data.datasets[3].data = resp.map(wb => wb.depth);
+      chart.update();
+    } catch (err) {
+      console.error("Ошибка сравнения:", err);
+    }
+  }
 });

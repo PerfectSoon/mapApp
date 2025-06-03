@@ -1,73 +1,94 @@
-const token = localStorage.getItem("access_token");
+// page.js
+document.addEventListener('DOMContentLoaded', () => {
+  // ‼️ Перед тем как показывать что-либо, убедимся в наличии токена
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    // Без token — сразу на логин
+    window.location.replace("login.html");
+    return;
+  }
 
-if (token) {
-    document.getElementById("loginBtn").style.display = "none";
-    document.getElementById("profileBtn").style.display = "block";
-    // При наличии токена сразу запрашиваем профиль для определения роли
-    fetchProfile(token);
-} else {
-    document.getElementById("loginBtn").style.display = "block";
-    document.getElementById("profileBtn").style.display = "none";
-}
+  // Если токен есть, прячем/показываем кнопки
+  document.getElementById("loginBtn").style.display   = "none";
+  document.getElementById("profileBtn").style.display = "block";
 
-document.getElementById("loginBtn").addEventListener("click", function() {
+  // Сразу подтягиваем профиль
+  fetchProfile();
+
+  // Навешиваем события
+  document.getElementById("loginBtn").addEventListener("click", () => {
     window.location.href = "login.html";
-});
+  });
 
-document.getElementById("profileBtn").addEventListener("click", function() {
+  document.getElementById("profileBtn").addEventListener("click", () => {
     const profileModal = document.getElementById("profileModal");
     profileModal.style.display = "block";
-    // При клике можно также обновить профиль
-    fetchProfile(token);
-});
+    fetchProfile();
+  });
 
-document.getElementById("profile-modal-close").addEventListener("click", function() {
+  document.getElementById("profile-modal-close").addEventListener("click", () => {
     document.getElementById("profileModal").style.display = "none";
-});
+  });
 
-window.addEventListener("click", function(event) {
+  window.addEventListener("click", event => {
     const profileModal = document.getElementById("profileModal");
     if (event.target === profileModal) {
-        profileModal.style.display = "none";
+      profileModal.style.display = "none";
     }
-});
+  });
 
-document.getElementById("logoutBtn").addEventListener("click", function() {
+  document.getElementById("logoutBtn").addEventListener("click", () => {
     localStorage.removeItem("access_token");
-    window.location.reload();
-});
+    window.location.replace("login.html");
+  });
 
-// Обработчик для кнопки админки
-document.getElementById("adminBtn").addEventListener("click", function() {
+  document.getElementById("adminBtn").addEventListener("click", () => {
     window.location.href = "admin.html";
+  });
 });
 
-function fetchProfile(token) {
-    fetch("/auth/profile", {
-        method: "GET",
-        headers: {
-            "Authorization": "Bearer " + token
-        }
-    })
+// Всегда заново читаем токен перед запросом
+function fetchProfile() {
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    window.location.replace("login.html");
+    return;
+  }
+
+  fetch("/auth/profile", {
+    headers: { "Authorization": "Bearer " + token }
+  })
     .then(response => {
-        if (!response.ok) {
-            throw new Error("Ошибка при получении профиля");
-        }
-        return response.json();
+      if (!response.ok) {
+        // если сервеp вернул 401/403 — скорее всего токен невалиден
+        throw new Error("Неавторизован");
+      }
+      return response.json();
     })
     .then(data => {
-        document.getElementById("profileData").textContent = JSON.stringify(data, null, 2);
-        // Если роль пользователя admin, показываем кнопку админки
-        if (data.role && data.role.toLowerCase() === "admin") {
-            document.getElementById("adminBtn").style.display = "block";
-        } else {
-            document.getElementById("adminBtn").style.display = "none";
-        }
+      document.getElementById("profileEmail").textContent = data.email;
+      document.getElementById("profileRole").textContent  = formatRole(data.role);
+
+      // Права на кнопки
+      document.getElementById("adminBtn").style.display  =
+        data.role === "admin" ? "block" : "none";
+      document.getElementById("exportBtn").style.display =
+        data.role === "scientific" ? "block" : "none";
     })
     .catch(err => {
-        console.error(err);
-        alert("Ошибка загрузки профиля. Возможно, токен устарел.");
+      console.warn("fetchProfile error:", err);
+      // При любом сбое — чистим токен и редиректим
+      localStorage.removeItem("access_token");
+      alert("Сессия истекла, пожалуйста, авторизуйтесь заново.");
+      window.location.replace("login.html");
     });
+}
 
-
+function formatRole(role) {
+  switch (role?.toLowerCase()) {
+    case "admin":      return "Администратор";
+    case "scientific": return "Научный сотрудник";
+    case "user":       return "Гость";
+    default:           return role || "неизвестно";
+  }
 }
