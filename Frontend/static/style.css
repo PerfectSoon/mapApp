@@ -327,3 +327,33 @@ li {
   padding: 0;
 }
 
+#exportSearch {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.export-list {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  padding: 8px;
+  margin-bottom: 16px;
+}
+.export-list label {
+  display: block;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+.export-actions {
+  text-align: right;
+}
+.export-actions button {
+  margin-left: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}

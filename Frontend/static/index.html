@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     <link rel="stylesheet" href="/static/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="/static/page.js"></script>
     <style>
         /* Общие стили */
         * {
@@ -152,7 +153,7 @@
             <div class="header__buttons">
                 <button class="admin-button" id="adminBtn" style="display: none;">Админка</button>
                 <button class="statistic-button" id="statisticBtn">Статистика</button>
-                <button class="export-button" id="exportBtn">Экспорт</button>
+                <button class="export-button" id="exportBtn" style="display: none;">Экспорт</button>
                 <button class="profile-button" id="profileBtn">Профиль</button>
                 <button class="login-button" id="loginBtn">Войти</button>
             </div>
@@ -227,13 +228,36 @@
             <span id="profile-modal-close" class="modal-close">&times;</span>
             <div id="profile-modal-body">
                 <h2>Ваш профиль</h2>
-                <pre id="profileData"></pre>
+                 <div id="profileData">
+                      <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+                      <p><strong>Роль:</strong> <span id="profileRole"></span></p>
+                </div>
                 <button id="logoutBtn" class="logout-button">Выйти</button>
             </div>
         </div>
     </div>
 
-    <script src="/static/page.js"></script>
+    <div id="exportModal" class="modal">
+  <div class="modal-content">
+    <span id="export-modal-close" class="close">&times;</span>
+    <h2>Выберите водоёмы для экспорта</h2>
+
+    <!-- Поисковая строка -->
+    <input type="text" id="exportSearch" placeholder="Поиск по названию..." />
+
+    <!-- Список водоёмов -->
+    <div id="exportList" class="export-list">
+      <!-- Динамически сюда добавятся чекбоксы -->
+    </div>
+
+    <!-- Кнопки -->
+    <div class="export-actions">
+      <button id="exportConfirmBtn">Экспорт</button>
+      <button id="exportCancelBtn">Отмена</button>
+    </div>
+  </div>
+</div>
+
     <script>
          document.getElementById("statisticBtn").addEventListener("click", function() {
             window.location.href = "statistic.html";
@@ -241,6 +265,7 @@
     </script>
 
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="/static/common.js"></script>
     <script src="/static/main.js"></script>
 </body>
 </html>
