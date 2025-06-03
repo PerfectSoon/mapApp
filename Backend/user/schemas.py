@@ -1,16 +1,17 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from Backend.database.models import UserRole
 
 
 class UserCreate(BaseModel):
-    email: EmailStr  #
+    email: EmailStr
     password: str
+    role: UserRole
 
 
 class UserOut(BaseModel):
     id: int
     email: EmailStr
-    role: str
+    role: UserRole
 
     class Config:
         from_attributes = True

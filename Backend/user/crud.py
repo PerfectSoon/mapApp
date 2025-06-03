@@ -1,15 +1,15 @@
 from sqlalchemy.orm import Session
-from Backend.database.models import User
+from Backend.database.models import User, UserRole
 from Backend.user.security import get_password_hash, verify_password
 
 
-def create_user(db: Session, email: str, password: str):
+def create_user(db: Session, email: str, password: str, role: UserRole):
     user_db = db.query(User).filter(User.email == email).first()
     if user_db:
         raise ValueError("Пользователь с таким email уже существует")
 
     hashed = get_password_hash(password)
-    new_user = User(email=email, hashed_password=hashed)
+    new_user = User(email=email, hashed_password=hashed, role=role)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)

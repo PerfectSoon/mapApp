@@ -108,7 +108,9 @@ class OrganismType(Base):
 
 class UserRole(str, Enum):
     user = "user"
+    scientific = "scientific"
     admin = "admin"
+
 
 
 class User(Base):

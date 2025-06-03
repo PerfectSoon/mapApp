@@ -23,7 +23,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 @router.post("/register", response_model=UserOut)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     try:
-        new_user = create_user(db, user.email, user.password)
+        new_user = create_user(db, user.email, user.password, user.role)
         return new_user
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
